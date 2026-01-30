@@ -1,6 +1,5 @@
 
 # 一、Sinusoidal PE是什么？
-[sinusoidal PE analysis](https://kazemnejad.com/blog/transformer_architecture_positional_encoding/) <br>
 在Transformer原始论文《Attention is All You Need》中，作者使用了固定的**正余弦位置编码**Sinusoidal PE来为模型引入位置信息。其核心思想是利用不同频率的正弦波和余弦波对每个位置进行编码，具体公式如下：
 
 $$
@@ -79,6 +78,12 @@ pe = sinusoidal_position_encoding(seq_len, d_model)
 
 print(pe.shape)# (120, 8)
 ```
+
+## 为什么这么设计？
+在[sinusoidal PE analysis](https://kazemnejad.com/blog/transformer_architecture_positional_encoding/) 文章中，提到了positional embedding的其他设计思路和为什么选取最终的这个设计。
+
+1. \text{PE}(i) = \frac{i}{total_len} 这里的i指的是一个sequence里面的一个token的position <br> 有什么问题？这里的PE在不同的sequence长度下面是不统一的，比如一个长为4的sequence的第2个token和一个长为8的sequence的第4个token对应的PE是一样的，这种不一致会带来问题；尤其是考虑到计算不同位置的token之间的关系的时候，对于一个长为4的sequence，相邻两个token的PE差值为0.25，可是对于一个长为10000的sequence，这个差值就是0.0001，很明显模型难以对不同长度的sequence感知正确的位置关系。
+2. 
 
 # 二、Sinusoidal PE的远程衰减特性
 

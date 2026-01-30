@@ -18,7 +18,7 @@ $d_{\text{model}}$:embedding维度
 假设 $d_{\text{model}}$ =8，token序列长度seq_len=120，现在需要计算序列中第2个位置（即`pos`=2）的token对应的位置编码，套公式：
 
 计算每个维度的缩放因子：
-| i | 维度 (2i / 2i+1)  | $\text{div\_term}_i = 10000^{\frac{2i}{d_{\text{model}}$ |
+| i | 维度 (2i / 2i+1)  | $\text{div\_term}_i = 10000^{\frac{2i}{d_{\text{model}}}}$ |
 |---|------------------|------------------------------------|
 | 0 | 0 / 1            | $10000^{0} = 1$                    |
 | 1 | 2 / 3            | $10000^{0.25} \approx 10$          |
@@ -79,23 +79,71 @@ pe = sinusoidal_position_encoding(seq_len, d_model)
 print(pe.shape)# (120, 8)
 ```
 
-## 为什么这么设计？
+## 为什么这么设计？（new）
 在[sinusoidal PE analysis](https://kazemnejad.com/blog/transformer_architecture_positional_encoding/) 文章中，提到了positional embedding的其他设计思路和为什么选取最终的这个设计。
 
-1. $$ \text{PE}(i) = \frac{i}{total\_len} $$
-
-这里的 $$i$$ 指的是一个 sequence 里面的一个 token 的 position。
+(1) $ \text{PE}(i) = \frac{i}{total\_len} $ 这里的 $i$ 指的是一个 sequence 里面的一个 token 的 position。   
 **有什么问题？**
 
-这里的 PE 在不同的 sequence 长度下面是不统一的。比如一个长为 4 的 sequence 的第 2 个 token 和一个长为 8 的 sequence 的第 4 个 token 对应的 PE 是一样的，这种不一致会带来问题；尤其是考虑到计算不同位置的 token 之间的关系的时候，对于一个长为 4 的 sequence，相邻两个 token 的 PE 差值为 0.25，可是对于一个长为 10000 的 sequence，这个差值就是 0.0001，很明显模型难以对不同长度的 sequence 感知正确的位置关系。
+这里的 PE 在不同的 sequence 长度下面是不统一的。比如一个长为 4 的 sequence 的第 2 个 token 和一个长为 8 的 sequence 的第 4 个 token 对应的 PE 是一样的，这种不一致会带来问题；  
+尤其是考虑到计算不同位置的 token 之间的关系的时候，对于一个长为 4 的 sequence，相邻两个 token 的 PE 差值为 0.25，可是对于一个长为 10000 的 sequence，这个差值就是 0.0001，很明显模型难以对不同长度的 sequence 感知正确的位置关系。
 
+(2) $ \text{PE}(i) = i $   
+**有什么问题？**  
+如果sequence_len超出训练长度，模型可能不能正确捕捉位置信息  
 
+**PE的理想特征**：  
+每个position对应的pe是独特的  
+两个距离相同的position之间的距离对于不同长度的序列来说应该是固定的
+能够generalize to longer sequence 
+deterministic  
 
-# 二、Sinusoidal PE的远程衰减特性
+# 二、Sinusoidal PE的特征
+
+## 相对位置易感知 (new)
+
+对于任何固定的偏移量 $𝑘$ , 位置 $𝑡+𝑘$ 的编码向量 $PE_{𝑡+𝑘}$ 都可以通过一个与绝对位置 $𝑡$ 无关的旋转矩阵乘以 $PE_{t}$ 得到。这里的 $PE_{𝑡+𝑘}$ 指的是一个sin-cos pair
+
+证明：  
+$$
+\begin{align}
+\text{PE}(t, 2i) &= \sin(\omega_i \cdot t) \\
+\text{PE}(t, 2i+1) &= \cos(\omega_i \cdot t)
+\end{align}
+$$  
+$$ \omega_i = \frac{1}{10000^{2i/d}} $$   
+1.  **正弦展开**：
+    $$ \sin(\omega_i (t+k)) = \sin(\omega_i t + \omega_i k) = \sin(\omega_i t)\cos(\omega_i k) + \cos(\omega_i t)\sin(\omega_i k) $$
+
+2.  **余弦展开**：
+    $$ \cos(\omega_i (t+k)) = \cos(\omega_i t + \omega_i k) = \cos(\omega_i t)\cos(\omega_i k) - \sin(\omega_i t)\sin(\omega_i k) $$
+$$
+\begin{bmatrix}
+\sin(\omega_i (t+k)) \\
+\cos(\omega_i (t+k))
+\end{bmatrix}
+=
+\begin{bmatrix}
+\cos(\omega_i k) & \sin(\omega_i k) \\
+-\sin(\omega_i k) & \cos(\omega_i k)
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+\sin(\omega_i t) \\
+\cos(\omega_i t)
+\end{bmatrix}
+$$  
+
+所以：
+$$ \vec{p_{t+k}} = M \cdot \vec{p_t} $$  
+$$ M_k = \begin{bmatrix} \cos(\omega_i k) & \sin(\omega_i k) \\ -\sin(\omega_i k) & \cos(\omega_i k) \end{bmatrix} $$
+
+## embedding position增大，变化尺度减小
+> 此部分被原作者取名为“远程衰减特性”，但是感觉理解上可能稍微有点不太明确，所以更改了一下名字
 
 正余弦位置编码不需要学习参数，节省了计算资源和存储空间。两者的组合能够平滑过渡，适合建模序列中的位置关系，并捕捉token之间的相对位置差异。
 
-正余弦位置编码具有远程衰减的特性：对于一个序列中每个token的向量，在对每个token施加RoPE时，从序列token视角来看，每个token向量的低维元素(i较小)在相邻token之间的变化比较快，而高维(i较大)则比较慢。
+正余弦位置编码具有远程衰减的特性：对于一个序列中每个token的向量，在对每个token施加sin PE时，从序列token视角来看，每个token向量的低维元素(i较小)在相邻token之间的变化比较快，而高维(i较大)则比较慢。
 
 下面来推导一下这个结论，回看其数学计算公式:
 
@@ -171,6 +219,11 @@ x轴是不同的pos，y轴是相应pos下最终位置编码的元素值。可以
 
 如上图所示，当i=64（较大）时，即使pos从10增到20，y轴对应的值变化也不大，这种细微的变化难以被模型感知。也就是说，当序列变长（seq_length较大），远距离(较大的i)相邻token对应元素之间的差异会变得不明显。
 
+> 一些问题：
+> 1. 这里提到的“差异”是数值上面的差异，而不是比例方面的差异（比例方面的在上面已经证明不会变了）。那么，模型在捕捉的时候，到底是捕捉线性变化比较精准，还是捕捉比例变化比较精准？
+> 2. 这里的这种“衰减”真的是不好的吗？如果是的话，为什么呢？既然下文提到了RoPE继承了这种衰减，那么RoPE真的有解决这个问题吗？
+> 3. 🤔 在**相对位置易感知**部分，其实把 $\omega_i$ 去掉，会发现其实直接用 $\sin\left(\frac{pos}{h}\right)$ 和 $\cos\left(\frac{pos}{h}\right)$ （h是一个足够大的数）其实也能实现。那么，这里到底为什么要除以 $\omega_i$ ？特征维度的position到底为什么要被考虑和计算？
+
 # 三、Sinusoidal PE的缺陷
 
 正余弦位置编码的最大缺陷在于，它只能提供绝对位置信息。在推理中，Attention模块计算的是Q和K的点积，而PE是直接加到embedding上，这使得**模型要学习如何将绝对位置转换为相对位置信息**，增加了学习负担。
@@ -186,6 +239,7 @@ RoPE继承了正余弦位置编码的远程衰减特性，但是通过将绝对�
 
 在下一篇文章中，我们将详细讲解RoPE的内容，欢迎持续关注。
 
-# 绝对位置编码和相对位置编码 
+# 四、绝对位置编码和相对位置编码 (new)
 
-Sinusoidal PE是绝对位置编码，
+但是sin PE和RoPE从一些角度来说，应该都是“以绝对位置编码的方式实现了相对位置编码”的类型；  
+那么，它们的差别是什么呢？RoPE的优点是什么呢？（下章分析）

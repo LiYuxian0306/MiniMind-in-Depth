@@ -82,8 +82,12 @@ print(pe.shape)# (120, 8)
 ## 为什么这么设计？
 在[sinusoidal PE analysis](https://kazemnejad.com/blog/transformer_architecture_positional_encoding/) 文章中，提到了positional embedding的其他设计思路和为什么选取最终的这个设计。
 
-1. \text{PE}(i) = \frac{i}{total_len}
-  这里的i指的是一个sequence里面的一个token的position <br> 有什么问题？这里的PE在不同的sequence长度下面是不统一的，比如一个长为4的sequence的第2个token和一个长为8的sequence的第4个token对应的PE是一样的，这种不一致会带来问题；尤其是考虑到计算不同位置的token之间的关系的时候，对于一个长为4的sequence，相邻两个token的PE差值为0.25，可是对于一个长为10000的sequence，这个差值就是0.0001，很明显模型难以对不同长度的sequence感知正确的位置关系。
+$$1. \text{PE}(i) = \frac{i}{total\_len} $$
+
+这里的 $$i$$ 指的是一个 sequence 里面的一个 token 的 position。
+**有什么问题？**
+
+这里的 PE 在不同的 sequence 长度下面是不统一的。比如一个长为 4 的 sequence 的第 2 个 token 和一个长为 8 的 sequence 的第 4 个 token 对应的 PE 是一样的，这种不一致会带来问题；尤其是考虑到计算不同位置的 token 之间的关系的时候，对于一个长为 4 的 sequence，相邻两个 token 的 PE 差值为 0.25，可是对于一个长为 10000 的 sequence，这个差值就是 0.0001，很明显模型难以对不同长度的 sequence 感知正确的位置关系。
 
 
 

@@ -102,28 +102,42 @@ deterministic
 
 ## 相对位置易感知 (new)
 
-对于任何固定的偏移量 $𝑘$ , 位置 $𝑡+𝑘$ 的编码向量 $PE_{𝑡+𝑘}$ 都可以通过一个与绝对位置 $𝑡$ 无关的旋转矩阵乘以 $PE_{t}$ 得到。这里的 $PE_{𝑡+𝑘}$ 指的是一个sin-cos pair
+对于任何固定的偏移量 $k$ , 位置 $t+k$ 的编码向量 $PE_{t+k}$ 都可以通过一个与绝对位置 $t$ 无关的旋转矩阵乘以 $PE_{t}$ 得到。这里的 $PE_{t+k}$ 指的是一个 sin-cos pair。
 
-证明：   
+**证明：**
+
+定义位置编码如下：
 
 $$
 \begin{aligned}
 \text{PE}(t, 2i) &= \sin(\omega_i \cdot t) \\
-\text{PE}(t, 2i+1) &= \cos(\omega_i \cdot t) \\
+\text{PE}(t, 2i+1) &= \cos(\omega_i \cdot t)
 \end{aligned}
-$$    
+$$
 
-$$ \omega_i = \frac{1}{10000^{2i/d}} $$   
-1.  **正弦展开**： 
-$$ \sin(\omega_i (t+k)) = \sin(\omega_i t + \omega_i k) = \sin(\omega_i t)\cos(\omega_i k) + \cos(\omega_i t)\sin(\omega_i k) $$
+其中频率 $\omega_i$ 定义为：
 
-2.  **余弦展开**：    
-$$ \cos(\omega_i (t+k)) = \cos(\omega_i t + \omega_i k) = \cos(\omega_i t)\cos(\omega_i k) - \sin(\omega_i t)\sin(\omega_i k) $$
+$$
+\omega_i = \frac{1}{10000^{2i/d}}
+$$
 
+1. **正弦展开**：
+
+$$
+\sin(\omega_i (t+k)) = \sin(\omega_i t + \omega_i k) = \sin(\omega_i t)\cos(\omega_i k) + \cos(\omega_i t)\sin(\omega_i k)
+$$
+
+2. **余弦展开**：
+
+$$
+\cos(\omega_i (t+k)) = \cos(\omega_i t + \omega_i k) = \cos(\omega_i t)\cos(\omega_i k) - \sin(\omega_i t)\sin(\omega_i k)
+$$
+
+将其写成矩阵形式：
 $$
 \begin{bmatrix}
 \sin(\omega_i (t+k)) \\
-\cos(\omega_i (t+k)) \\
+\cos(\omega_i (t+k))
 \end{bmatrix}
 =
 \begin{bmatrix}
@@ -135,11 +149,19 @@ $$
 \sin(\omega_i t) \\
 \cos(\omega_i t)
 \end{bmatrix}
-$$  
+$$
 
 所以：
-$$ \vec{p_{t+k}} = M \cdot \vec{p_t} $$  
-$$ M_k = \begin{bmatrix} \cos(\omega_i k) & \sin(\omega_i k) \\ -\sin(\omega_i k) & \cos(\omega_i k) \end{bmatrix} $$
+
+$$
+\vec{p_{t+k}} = M_k \cdot \vec{p_t}
+$$
+
+其中旋转矩阵 $M_k$ 为：
+
+$$
+M_k = \begin{bmatrix} \cos(\omega_i k) & \sin(\omega_i k) \\ -\sin(\omega_i k) & \cos(\omega_i k) \end{bmatrix}
+$$
 
 ## embedding position增大，变化尺度减小
 > 此部分被原作者取名为“远程衰减特性”，但是感觉理解上可能稍微有点不太明确，所以更改了一下名字

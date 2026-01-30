@@ -120,8 +120,11 @@ $$
 
 
 ## RoPE详解
-RoPE的目标，正是找到一种旋转操作，使得在不显式计算位置差 $m-n$ 的情况下，位置编码自然地将“相对位置信息”融入到注意力机制中的 $qk$ 中。换句话说，需要找到这么一种映射 $g$ ，针对给定的两个用于计算注意力的向量 $q$ 和 $k$ ，以及m-n，使得  
-$$f(q,m)f(k,n)=g(q,k,m-n)$$
+RoPE的目标，正是找到一种旋转操作，使得在不显式计算位置差 $m-n$ 的情况下，位置编码自然地将“相对位置信息”融入到注意力机制中的 $qk$ 中。换句话说，需要找到这么一种映射 $g$ ，针对给定的两个用于计算注意力的向量 $q$ 和 $k$ ，以及m-n，使得    
+
+$$
+f(q,m)f(k,n)=g(q,k,m-n)
+$$
 
 其中， $q$ 和 $k$ 是长度为 $d_{model}$ 的向量，m和n分别是对应向量中第m个和第n个pos处的元素。
 
@@ -153,7 +156,15 @@ $$
 
 
 
-举个实际例子，若 $$\mathbf{x} = \begin{bmatrix} 1 \\ 0 \end{bmatrix}$$ 且 $$\theta = \frac{\pi}{2}$$
+举个实际例子，若     
+
+$$
+\mathbf{x} = \begin{bmatrix} 1 \\ 0 \end{bmatrix}
+$$ 且   
+
+$$
+\theta = \frac{\pi}{2}
+$$
 
 （即逆时针旋转 90°）：
 
@@ -276,8 +287,8 @@ $$
 
 ##### 示例（假设 $\omega = 1$, $m = 1$, $n = 2$）
 
-- 则 $\theta_q = 1$, $\theta_k = 2$
-- $R(\theta_k - \theta_q) = R(1)$
+- 则 $\theta_q = 1$ , $\theta_k = 2$ 
+- $R(\theta_k - \theta_q) = R(1)$ 
 
 那么有：
 
@@ -331,7 +342,7 @@ x_{d_{model}-1}
 $$
 
 
-其中，$\Theta=\left\{\theta_i=\omega^{-\frac{i}{d_{model}}}, i \in [0, 2, \ldots, d_{model}-2] \right\}$。
+其中，$\Theta=\left\{\theta_i=\omega^{-\frac{i}{d_{model}}}, i \in [0, 2, \ldots, d_{model}-2] \right\}$ 。
 
 注意，公式中的m指的是pos，即序列中第m个词向量的pos=m，之所以不用pos，是为了使得公式看起来简洁。
 

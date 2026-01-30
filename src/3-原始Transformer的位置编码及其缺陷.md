@@ -133,13 +133,13 @@ $$
 \cos(\omega_i (t+k)) = \cos(\omega_i t + \omega_i k) = \cos(\omega_i t)\cos(\omega_i k) - \sin(\omega_i t)\sin(\omega_i k)
 $$
 
-将其写成矩阵形式：
+
+将其写成矩阵形式：  
 $$
 \begin{bmatrix}
 \sin(\omega_i (t+k)) \\
 \cos(\omega_i (t+k))
-\end{bmatrix}
-=
+\end{bmatrix =
 \begin{bmatrix}
 \cos(\omega_i k) & \sin(\omega_i k) \\
 -\sin(\omega_i k) & \cos(\omega_i k)

@@ -82,7 +82,7 @@ print(pe.shape)# (120, 8)
 ## 为什么这么设计？（new）
 在[sinusoidal PE analysis](https://kazemnejad.com/blog/transformer_architecture_positional_encoding/) 文章中，提到了positional embedding的其他设计思路和为什么选取最终的这个设计。
 
-(1) $\text{PE}(i) = \frac{i}{total\_len}$ 这里的 $i$ 指的是一个 sequence 里面的一个 token 的 position。   
+(1) $\text{PE}(i) = \frac{i}{\text{total\_len}}$ 这里的 $i$ 指的是一个 sequence 里面的一个 token 的 position。   
 **有什么问题？**
 
 这里的 PE 在不同的 sequence 长度下面是不统一的。比如一个长为 4 的 sequence 的第 2 个 token 和一个长为 8 的 sequence 的第 4 个 token 对应的 PE 是一样的，这种不一致会带来问题；  
@@ -104,23 +104,26 @@ deterministic
 
 对于任何固定的偏移量 $𝑘$ , 位置 $𝑡+𝑘$ 的编码向量 $PE_{𝑡+𝑘}$ 都可以通过一个与绝对位置 $𝑡$ 无关的旋转矩阵乘以 $PE_{t}$ 得到。这里的 $PE_{𝑡+𝑘}$ 指的是一个sin-cos pair
 
-证明：    
-$$
-\begin{align}
-\text{PE}(t, 2i) &= \sin(\omega_i \cdot t) \\
-\text{PE}(t, 2i+1) &= \cos(\omega_i \cdot t)
-\end{align}
-$$  
-$$ \omega_i = \frac{1}{10000^{2i/d}} $$   
-1.  **正弦展开**：  
-    $$ \sin(\omega_i (t+k)) = \sin(\omega_i t + \omega_i k) = \sin(\omega_i t)\cos(\omega_i k) + \cos(\omega_i t)\sin(\omega_i k) $$
+证明：   
 
-2.  **余弦展开**：  
-    $$ \cos(\omega_i (t+k)) = \cos(\omega_i t + \omega_i k) = \cos(\omega_i t)\cos(\omega_i k) - \sin(\omega_i t)\sin(\omega_i k) $$
+$$
+\begin{aligned}
+\text{PE}(t, 2i) &= \sin(\omega_i \cdot t) \\
+\text{PE}(t, 2i+1) &= \cos(\omega_i \cdot t) \\
+\end{aligned}
+$$    
+
+$$ \omega_i = \frac{1}{10000^{2i/d}} $$   
+1.  **正弦展开**： 
+$$ \sin(\omega_i (t+k)) = \sin(\omega_i t + \omega_i k) = \sin(\omega_i t)\cos(\omega_i k) + \cos(\omega_i t)\sin(\omega_i k) $$
+
+2.  **余弦展开**：    
+$$ \cos(\omega_i (t+k)) = \cos(\omega_i t + \omega_i k) = \cos(\omega_i t)\cos(\omega_i k) - \sin(\omega_i t)\sin(\omega_i k) $$
+
 $$
 \begin{bmatrix}
 \sin(\omega_i (t+k)) \\
-\cos(\omega_i (t+k))
+\cos(\omega_i (t+k)) \\
 \end{bmatrix}
 =
 \begin{bmatrix}

@@ -1,6 +1,6 @@
 
 # 一、Sinusoidal PE是什么？
-[sinusoidal PE analysis](https://kazemnejad.com/blog/transformer_architecture_positional_encoding/)
+[sinusoidal PE analysis](https://kazemnejad.com/blog/transformer_architecture_positional_encoding/) <br>
 在Transformer原始论文《Attention is All You Need》中，作者使用了固定的**正余弦位置编码**Sinusoidal PE来为模型引入位置信息。其核心思想是利用不同频率的正弦波和余弦波对每个位置进行编码，具体公式如下：
 
 $$

@@ -543,3 +543,8 @@ q_embed, k_embed=apply_rotary_pos_emb(q,k,freqs_cos, freqs_sin)
 print(q_embed.shape, k_embed.shape)# torch.Size([32768, 1, 4]) torch.Size([32768, 1, 4])   1是维度扩展得到的，4是d_model，32768是当前设置的最长序列长度
 ```
 
+
+## Minimind 中添加的处理机制： YaRN
+YaRN: Yet another RoPE for Nontrivial context 一种长文本拓展技术，一个[参考blog](https://zhuanlan.zhihu.com/p/25241219397)
+
+
